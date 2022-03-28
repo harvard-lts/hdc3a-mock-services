@@ -31,7 +31,7 @@ def subscribe_to_listener(connection_params):
             connection_params.conn.subscribe(destination=connection_params.queue, id=1, ack='client-individual')
             _reconnect_attempts = 0
     else:
-        logging.error('Maximum reconnect attempts reached for this connection. reconnect attempts: {}'.format(_reconnect_attempts), flush=True)
+        logging.error('Maximum reconnect attempts reached for this connection. reconnect attempts: {}'.format(_reconnect_attempts))
 
 
 class MqListener(stomp.ConnectionListener):
