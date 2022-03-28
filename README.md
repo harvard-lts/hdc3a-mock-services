@@ -28,6 +28,9 @@ Therefore, the Transfer Queue notifies the Mock Starfish Service whether to mock
 - `STARFISH_TRANSFER_QUEUE_CONSUME_SUCCESS_NAME`
 - `STARFISH_TRANSFER_QUEUE_CONSUME_FAILURE_NAME`
 
+
+3. Start up the local DTS (instructions here: https://github.com/harvard-lts/drs-translation-service)
+
 ## Testing
 
 ### Starfish
