@@ -1,6 +1,11 @@
 # hdc3a-mock-services
 Mock services for Starfish and DRS Ingest to allow DIMS and DTS to function without being connected to the actual services.
 
+## Diagram
+The diagram below outlines what the flow of control looks like using the mock services.
+
+![DVN to DRS Mock Flow](./ReadmeDocs/Dataverse-to-DRS-Mock Diagram.png)
+
 ## Local setup
     
 1. Make a copy of the env-template.txt to .env and modify the user and password variables.
