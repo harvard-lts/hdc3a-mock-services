@@ -16,6 +16,7 @@ def notify_starfish_transfer_success_message():
        
         #Add more details that will be needed from the load report.
         msg_json = {
+            "package_id": "12345",
             "transfer_status": "success",
             "destination_path": "/path/to/object"
         }
@@ -41,6 +42,7 @@ def notify_starfish_transfer_failure_message():
        
         #Add more details that will be needed from the load report.
         msg_json = {
+            "package_id": "12345",
             "transfer_status": "failure",
             "destination_path": "/path/to/object"
         }
