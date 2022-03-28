@@ -33,11 +33,15 @@ Therefore, the Transfer Queue notifies the Mock Starfish Service whether to mock
 
 ## Testing
 
+When testing, the following .env variables will need to have the same values in order for the flow to work properly:
+
+- hdc3a-mock-services PROCESS_QUEUE_NAME = dts-translation-service PROCESS_QUEUE_CONSUME_NAME
+
 ### Starfish
 Exec into the container:
 
 ```
-`docker exec -it hdc3a-mock-services bash
+docker exec -it hdc3a-mock-services bash
 ```
 
 #### Mocking a Success:
