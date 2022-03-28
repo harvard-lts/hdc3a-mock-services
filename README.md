@@ -66,7 +66,7 @@ python mqutils/notify_dvn_data_ready.py failure
 
 3. Check the `STARFISH_TRANSFER_QUEUE_CONSUME_FAILURE_NAME` and verify that the pending messages incremented.  The listener will pick it up but take a few seconds (by design) to handle it.
 
-4. Once the message is picked up, a new message should appear on the `STARFISH_TRANSFER_QUEUE_PUBLISH_NAME` (default name is dropbox-transfer-status).  If DIMS is not configured to pick up the messages from this queue, the message should remain in pending.  You can check that it has a status of failure.
+4. Once the message is picked up, a new message should appear on the `STARFISH_TRANSFER_QUEUE_PUBLISH_NAME` (default name is dropbox-transfer-failure).  If DIMS is not configured to pick up the messages from this queue, the message should remain in pending.  You can check that it has a status of failure.
 
 
 
