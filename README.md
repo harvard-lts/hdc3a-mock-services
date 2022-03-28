@@ -4,7 +4,7 @@ Mock services for Starfish and DRS Ingest to allow DIMS and DTS to function with
 ## Diagram
 The diagram below outlines what the flow of control looks like using the mock services.
 
-![DVN to DRS Mock Flow](./ReadmeDocs/Dataverse-to-DRS-Mock Diagram.png)
+![DVN to DRS Mock Flow](https://github.com/harvard-lts/hdc3a-mock-services/blob/HDC114/ReadmeDocs/Dataverse-to-DRS-Mock%20Diagram.png)
 
 ## Local setup
     
