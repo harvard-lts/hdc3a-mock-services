@@ -21,14 +21,15 @@ This will set up listeners to the following 3 queues listed in the .env:
 The real DRS Ingest monitors dropboxes where the mock DRS Ingest service does not.
 Therefore, the `DRS_QUEUE_CONSUME_NAME` notifies the Mock DRS Ingest Service that it 'received and ingested' a batch so that it can notify the drs updated topic
 
-3. Start up the local DTS (instructions here: https://github.com/harvard-lts/drs-translation-service)
-
 - `DRS_QUEUE_CONSUME_NAME`
 
 The real Starfish makes a transfer that may succeed or fail.  We want to be able to test both.
 Therefore, the Transfer Queue notifies the Mock Starfish Service whether to mock a successful or failed transfer using the following two queues:
 - `STARFISH_TRANSFER_QUEUE_CONSUME_SUCCESS_NAME`
 - `STARFISH_TRANSFER_QUEUE_CONSUME_FAILURE_NAME`
+
+
+3. Start up the local DTS (instructions here: https://github.com/harvard-lts/drs-translation-service)
 
 ## Testing
 
