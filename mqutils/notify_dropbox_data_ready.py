@@ -14,7 +14,7 @@ def notify_data_ready_process_message():
         msg_json = {
             "package_id": "12345",
             "application_name": "Dataverse",
-            "dropbox_path": "/path/to/object",
+            "destination_path": "/path/to/object",
             "message": "Message"
         }
 
