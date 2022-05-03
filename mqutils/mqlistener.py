@@ -68,8 +68,8 @@ class MqListener(stomp.ConnectionListener):
             notification_manager.notify_starfish_transfer_failure_message()
         elif self.connection_params.queue == os.getenv('DRS_QUEUE_CONSUME_NAME'):
             logging.debug('DRS Ingest complete.  Sending success message.')
-            #Send dummy ingest status message to process queue 
-            notification_manager.notify_drs_ingest_success_message()
+            #Place a load report into the dropbox
+            notification_manager.send_drs_load_report()
         
         self.connection_params.conn.ack(self.message_id, 1)
 

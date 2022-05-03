@@ -58,34 +58,7 @@ def notify_starfish_transfer_failure_message():
         raise(e)
     return message
 
-def notify_drs_ingest_success_message():
-    '''Creates a dummy queue drs json message This is normally placed on the topic by
-    the DRS Ingest'''
-    message = "No message"
-    try:
-        timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc, microsecond=0).isoformat()
-       
-        #Sample DRS Ingest message.
-        msg_json = {"data":
-                    {"objectId":123,
-                     "contentModel":"CMID-5.0",
-                     "accessFlag":"N",
-                     "isFile":"false",
-                     "ocflObjectKey":"12345678",
-                     "ocflObjectPath":"/8765/4321/12345678",
-                     "primaryUrn":"URN-3.HUL.ARCH:123456",
-                     "status":"current"}
-                    }
-
-        logging.debug("********SENDING DRS INGEST MESSAGE TO DRS TOPIC*******")
-        logging.debug(msg_json)
-        logging.debug("**********************************")
-        message = json.dumps(msg_json)
-        message = json.dumps(msg_json)
-        connection_params = mqutils.get_drs_mq_connection()
-        connection_params.conn.send(os.getenv('DRS_TOPIC_NAME'), message, headers = {"persistent": "true"})
-    except Exception as e:
-        print(e)
-        raise(e)
-    return message
+def send_drs_load_report():
+    '''Places a load report in the dropbox.  Toggles between success and failure'''
+    
 

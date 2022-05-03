@@ -111,7 +111,13 @@ curl -X POST --insecure https://<servername>:10580/ingest
 
 5. Once the message is picked up, a new message should appear on the `STARFISH_TRANSFER_QUEUE_PUBLISH_NAME` (default name is dropbox-transfer-status).  DIMS Should handle the failure error from here.
 
+#### Triggering the real Transfer Service WITHOUT DIMS:
 
+1. Type the command and supply the full DOI that is in S3
+
+```
+python mqutils/notify_dvn_data_ready.py <DOI name>
+```
 
 ### DRS Ingest
 
@@ -128,7 +134,7 @@ python mqutils/notify_dropbox_data_ready.py
 4. Once the message is picked up, it moves through a workflow that expects DTS to assist:
 
 - DTS sends a message to the `DRS_QUEUE_CONSUME_NAME` to trigger the mock DRS Ingest.  
-- Mock DRS Ingest sends a message to the ``DRS_TOPIC_NAME` which is picked up by DTS
+- Mock DRS Ingest places a load report into the dropbox which is picked up by DTS
 - DTS sends a message to the process queue configured in DTS called `drs-ingest-status`
 
 If DIMS is not configured to pick up the messages from `drs-ingest-status`, the message should remain in pending.  You can check that ii arrived.

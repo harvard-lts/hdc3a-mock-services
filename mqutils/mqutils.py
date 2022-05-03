@@ -8,6 +8,24 @@ class ConnectionParams:
         self.port = port
         self.user = user
         self.password = password
+
+def get_transfer_mq_connection():
+    print("************************ MQUTILS - GET_TRANSFER_MQ_CONNECTION *******************************")
+    try:
+        host = os.getenv('TRANSFER_MQ_HOST')
+        port = os.getenv('TRANSFER_MQ_PORT')
+        user = os.getenv('TRANSFER_MQ_USER')
+        password = os.getenv('TRANSFER_MQ_PASSWORD')
+        queue = os.getenv('TRANSFER_QUEUE_CONSUME_NAME')
+
+        conn = stomp.Connection([(host, port)], heartbeats=(40000, 40000), keepalive=True)
+        conn.set_ssl([(host, port)])
+        connection_params = ConnectionParams(conn, queue, host, port, user, password)
+        conn.connect(user, password, wait=True)
+    except Exception as e:
+        print(e)
+        raise(e)
+    return connection_params
         
 def get_transfer_success_mq_connection():
     print("************************ MQUTILS - GET_TRANSFER_MQ_CONNECTION *******************************")
