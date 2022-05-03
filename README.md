@@ -4,7 +4,7 @@ Mock services for Starfish and DRS Ingest to allow DIMS and DTS to function with
 ## Diagram
 The diagram below outlines what the flow of control looks like using the mock services.
 
-![DVN to DRS Mock Flow](https://github.com/harvard-lts/hdc3a-mock-services/blob/HDC114/ReadmeDocs/Dataverse-to-DRS-Mock%20Diagram.png)
+![DVN to DRS Mock Flow](ReadmeDocs/Dataverse-to-DRS-Mock%20Diagram.png)
 
 ## Local setup
     
@@ -35,7 +35,13 @@ Therefore, the Transfer Queue notifies the Mock Starfish Service whether to mock
 
 When testing, the following .env variables will need to have the same values in order for the flow to work properly:
 
-- hdc3a-mock-services PROCESS_QUEUE_NAME = dts-translation-service PROCESS_QUEUE_CONSUME_NAME
+- hdc3a-mock-services PROCESS_QUEUE_NAME = drs-translation-service PROCESS_QUEUE_CONSUME_NAME
+
+If using DIMS:
+
+- hdc3a-mock-services STARFISH_TRANSFER_QUEUE_CONSUME_SUCCESS_NAME = drs-import-management-service MQ_TRANSFER_QUEUE_TRANSFER_READY (to mock a successful transfer)
+- hdc3a-mock-services STARFISH_TRANSFER_QUEUE_CONSUME_FAILURE_NAME = drs-import-management-service MQ_TRANSFER_QUEUE_TRANSFER_READY (to mock a failed transfer)
+- drs-translation-sesrvice PROCESS_QUEUE_CONSUME_NAME = drs-import-management-service MQ_PROCESS_QUEUE_PROCESS_READY
 
 ### Starfish
 Exec into the container:
@@ -44,7 +50,7 @@ Exec into the container:
 docker exec -it hdc3a-mock-services bash
 ```
 
-#### Mocking a Success:
+#### Mocking a Success WITHOUT DIMS:
 
 1. Check the enque/dequue count on the queue `STARFISH_TRANSFER_QUEUE_CONSUME_SUCCESS_NAME` (the default name if you did not change it is transfer-ready-success)
 
@@ -58,7 +64,24 @@ python mqutils/notify_dvn_data_ready.py success
 
 4. Once the message is picked up, a new message should appear on the `STARFISH_TRANSFER_QUEUE_PUBLISH_NAME` (default name is dropbox-transfer-status).  If DIMS is not configured to pick up the messages from this queue, the message should remain in pending.  You can check that it has a status of success.
 
-#### Mocking a Failure:
+#### Mocking a Success WITH DIMS:
+
+1. Check the enque/dequue count on the queue `STARFISH_TRANSFER_QUEUE_CONSUME_SUCCESS_NAME` (the default name if you did not change it is transfer-ready-success)
+
+2. Make sure the environment variables for hdc3a-mock-services STARFISH_TRANSFER_QUEUE_CONSUME_SUCCESS_NAME = drs-import-management-service MQ_TRANSFER_QUEUE_TRANSFER_READY
+
+3. Call the DIMS ingest call
+
+```
+curl -X POST --insecure https://<servername>:10580/ingest
+```
+
+4. Check the `STARFISH_TRANSFER_QUEUE_CONSUME_SUCCESS_NAME` and verify that the pending messages incremented.  The listener will pick it up but take a few seconds (by design) to handle it.
+
+5. Once the message is picked up, a new message should appear on the `STARFISH_TRANSFER_QUEUE_PUBLISH_NAME` (default name is dropbox-transfer-status).  DIMS Will then trigger the DRS Ingest by placing a message on the `PROCESS_QUEUE_NAME` (default is dims-data-ready)
+
+
+#### Mocking a Failure WITHOUT DIMS:
 
 1. Check the enque/dequue count on the queue `STARFISH_TRANSFER_QUEUE_CONSUME_FAILURE_NAME` (the default name if you did not change it is transfer-ready-failure)
 
@@ -71,6 +94,22 @@ python mqutils/notify_dvn_data_ready.py failure
 3. Check the `STARFISH_TRANSFER_QUEUE_CONSUME_FAILURE_NAME` and verify that the pending messages incremented.  The listener will pick it up but take a few seconds (by design) to handle it.
 
 4. Once the message is picked up, a new message should appear on the `STARFISH_TRANSFER_QUEUE_PUBLISH_NAME` (default name is dropbox-transfer-success).  If DIMS is not configured to pick up the messages from this queue, the message should remain in pending.  You can check that it has a status of failure.
+
+#### Mocking a Failure WITH DIMS:
+
+1. Check the enque/dequue count on the queue `STARFISH_TRANSFER_QUEUE_CONSUME_FAILURE_NAME` (the default name if you did not change it is transfer-ready-failure)
+
+2. Make sure the environment variables for hdc3a-mock-services STARFISH_TRANSFER_QUEUE_CONSUME_FAILURE_NAME = drs-import-management-service MQ_TRANSFER_QUEUE_TRANSFER_READY
+
+3. Call the DIMS ingest call
+
+```
+curl -X POST --insecure https://<servername>:10580/ingest
+```
+
+4. Check the `STARFISH_TRANSFER_QUEUE_CONSUME_FAILURE_NAME` and verify that the pending messages incremented.  The listener will pick it up but take a few seconds (by design) to handle it.
+
+5. Once the message is picked up, a new message should appear on the `STARFISH_TRANSFER_QUEUE_PUBLISH_NAME` (default name is dropbox-transfer-status).  DIMS Should handle the failure error from here.
 
 
 
