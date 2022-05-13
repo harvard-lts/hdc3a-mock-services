@@ -1,10 +1,10 @@
-import sys, datetime, json, logging
+import sys, datetime, json, logging, os
 import mqutils as mqutils
 import mqlistener as mqlistener
 
 logging.basicConfig(filename='/home/appuser/logs/mock_services.log', level=logging.DEBUG)
        
-def notify_data_ready_process_message():
+def notify_data_ready_process_message(package):
     '''Creates a dummy queue json message to notify the queue that the 
     DVN data is ready to process.  This is normally placed on the queue by
     the DRS Import Management Service'''
@@ -12,10 +12,10 @@ def notify_data_ready_process_message():
     try:
         #Add more details that will be needed from the load report.
         msg_json = {
-            "package_id": "12345",
+            "package_id": package,
             "application_name": "Dataverse",
             "destination_path": "/path/to/object",
-            "message": "Message"
+            "admin_metadata": {"original_queue": os.getenv('PROCESS_QUEUE_NAME'), "retry_count":0}
         }
 
         message = json.dumps(msg_json)
@@ -30,4 +30,8 @@ def notify_data_ready_process_message():
 
 
 if __name__ == "__main__":
-    notify_data_ready_process_message()
+    args = sys.argv[1:]
+    value ="12345"
+    if len(args) > 0:
+        value = args[0]
+    notify_data_ready_process_message(value)

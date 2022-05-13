@@ -23,10 +23,6 @@ Therefore, the `DRS_QUEUE_CONSUME_NAME` notifies the Mock DRS Ingest Service tha
 
 - `DRS_QUEUE_CONSUME_NAME`
 
-The real Starfish makes a transfer that may succeed or fail.  We want to be able to test both.
-Therefore, the Transfer Queue notifies the Mock Starfish Service whether to mock a successful or failed transfer using the following two queues:
-- `STARFISH_TRANSFER_QUEUE_CONSUME_SUCCESS_NAME`
-- `STARFISH_TRANSFER_QUEUE_CONSUME_FAILURE_NAME`
 
 
 3. Start up the local DTS (instructions here: https://github.com/harvard-lts/drs-translation-service)
@@ -39,81 +35,17 @@ When testing, the following .env variables will need to have the same values in 
 
 If using DIMS:
 
-- hdc3a-mock-services STARFISH_TRANSFER_QUEUE_CONSUME_SUCCESS_NAME = drs-import-management-service MQ_TRANSFER_QUEUE_TRANSFER_READY (to mock a successful transfer)
-- hdc3a-mock-services STARFISH_TRANSFER_QUEUE_CONSUME_FAILURE_NAME = drs-import-management-service MQ_TRANSFER_QUEUE_TRANSFER_READY (to mock a failed transfer)
 - drs-translation-sesrvice PROCESS_QUEUE_CONSUME_NAME = drs-import-management-service MQ_PROCESS_QUEUE_PROCESS_READY
 
-### Starfish
-Exec into the container:
+#### Triggering the real Transfer Service WITHOUT DIMS:
+
+1. Exec into the container:
 
 ```
 docker exec -it hdc3a-mock-services bash
 ```
 
-#### Mocking a Success WITHOUT DIMS:
-
-1. Check the enque/dequue count on the queue `STARFISH_TRANSFER_QUEUE_CONSUME_SUCCESS_NAME` (the default name if you did not change it is transfer-ready-success)
-
-2. Type the command
-
-```
-python mqutils/notify_dvn_data_ready.py success
-```
-
-3. Check the `STARFISH_TRANSFER_QUEUE_CONSUME_SUCCESS_NAME` and verify that the pending messages incremented.  The listener will pick it up but take a few seconds (by design) to handle it.
-
-4. Once the message is picked up, a new message should appear on the `STARFISH_TRANSFER_QUEUE_PUBLISH_NAME` (default name is dropbox-transfer-status).  If DIMS is not configured to pick up the messages from this queue, the message should remain in pending.  You can check that it has a status of success.
-
-#### Mocking a Success WITH DIMS:
-
-1. Check the enque/dequue count on the queue `STARFISH_TRANSFER_QUEUE_CONSUME_SUCCESS_NAME` (the default name if you did not change it is transfer-ready-success)
-
-2. Make sure the environment variables for hdc3a-mock-services STARFISH_TRANSFER_QUEUE_CONSUME_SUCCESS_NAME = drs-import-management-service MQ_TRANSFER_QUEUE_TRANSFER_READY
-
-3. Call the DIMS ingest call
-
-```
-curl -X POST --insecure https://<servername>:10580/ingest
-```
-
-4. Check the `STARFISH_TRANSFER_QUEUE_CONSUME_SUCCESS_NAME` and verify that the pending messages incremented.  The listener will pick it up but take a few seconds (by design) to handle it.
-
-5. Once the message is picked up, a new message should appear on the `STARFISH_TRANSFER_QUEUE_PUBLISH_NAME` (default name is dropbox-transfer-status).  DIMS Will then trigger the DRS Ingest by placing a message on the `PROCESS_QUEUE_NAME` (default is dims-data-ready)
-
-
-#### Mocking a Failure WITHOUT DIMS:
-
-1. Check the enque/dequue count on the queue `STARFISH_TRANSFER_QUEUE_CONSUME_FAILURE_NAME` (the default name if you did not change it is transfer-ready-failure)
-
-2. Type the command
-
-```
-python mqutils/notify_dvn_data_ready.py failure
-```
-
-3. Check the `STARFISH_TRANSFER_QUEUE_CONSUME_FAILURE_NAME` and verify that the pending messages incremented.  The listener will pick it up but take a few seconds (by design) to handle it.
-
-4. Once the message is picked up, a new message should appear on the `STARFISH_TRANSFER_QUEUE_PUBLISH_NAME` (default name is dropbox-transfer-success).  If DIMS is not configured to pick up the messages from this queue, the message should remain in pending.  You can check that it has a status of failure.
-
-#### Mocking a Failure WITH DIMS:
-
-1. Check the enque/dequue count on the queue `STARFISH_TRANSFER_QUEUE_CONSUME_FAILURE_NAME` (the default name if you did not change it is transfer-ready-failure)
-
-2. Make sure the environment variables for hdc3a-mock-services STARFISH_TRANSFER_QUEUE_CONSUME_FAILURE_NAME = drs-import-management-service MQ_TRANSFER_QUEUE_TRANSFER_READY
-
-3. Call the DIMS ingest call
-
-```
-curl -X POST --insecure https://<servername>:10580/ingest
-```
-
-4. Check the `STARFISH_TRANSFER_QUEUE_CONSUME_FAILURE_NAME` and verify that the pending messages incremented.  The listener will pick it up but take a few seconds (by design) to handle it.
-
-5. Once the message is picked up, a new message should appear on the `STARFISH_TRANSFER_QUEUE_PUBLISH_NAME` (default name is dropbox-transfer-status).  DIMS Should handle the failure error from here.
-
-#### Triggering the real Transfer Service WITHOUT DIMS:
-
-1. Type the command and supply the full DOI that is in S3
+2. Type the command and supply the full DOI that is in S3
 
 ```
 python mqutils/notify_dvn_data_ready.py <DOI name>
@@ -121,20 +53,24 @@ python mqutils/notify_dvn_data_ready.py <DOI name>
 
 ### DRS Ingest
 
-1. Check the enque/dequue count on the queue `PROCESS_QUEUE_NAME` (the default name if you did not change it is dims-data-ready)
-
-2. Type the command
+1. Exec into the container:
 
 ```
-python mqutils/notify_dropbox_data_ready.py
+docker exec -it hdc3a-mock-services bash
 ```
 
-3. Check the `PROCESS_QUEUE_NAME` and verify that the pending messages incremented.  The listener will pick it up but take a few seconds (by design) to handle it.
+2. Check the enque/dequue count on the queue `PROCESS_QUEUE_NAME` (the default name if you did not change it is dims-data-ready)
+
+3. Type the command
+
+```
+python mqutils/notify_dropbox_data_ready.py <DOI name (optional>
+```
 
 4. Once the message is picked up, it moves through a workflow that expects DTS to assist:
 
 - DTS sends a message to the `DRS_QUEUE_CONSUME_NAME` to trigger the mock DRS Ingest.  
-- Mock DRS Ingest places a load report into the dropbox which is picked up by DTS
+- Mock DRS Ingest places a load report or batch.xml.failed into the dropbox which is picked up by DTS
 - DTS sends a message to the process queue configured in DTS called `drs-ingest-status`
 
 If DIMS is not configured to pick up the messages from `drs-ingest-status`, the message should remain in pending.  You can check that ii arrived.
