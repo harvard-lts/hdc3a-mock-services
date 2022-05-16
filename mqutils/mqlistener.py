@@ -39,6 +39,8 @@ class MqListener(stomp.ConnectionListener):
         self.connection_params = connection_params
         self.message_data = None
         self.message_id = None
+        #Helps toggle between failure and success
+        self.issuccessmock = True
         logging.debug('MqListener init')
 
     def on_error(self, frame):
@@ -57,19 +59,10 @@ class MqListener(stomp.ConnectionListener):
             raise mqexception.MQException("Incorrect formatting of message detected.  Required JSON but received {} ".format(body))
         
         time.sleep(10)
-        #For testing, we have separate queues to indicate whether to trigger success or failure of transfer
-        if self.connection_params.queue == os.getenv('STARFISH_TRANSFER_QUEUE_CONSUME_SUCCESS_NAME'):
-            logging.debug('Transfer to dropbox complete.  Sending success message.')
-            #Send successful transfer message
-            notification_manager.notify_starfish_transfer_success_message()
-        if self.connection_params.queue == os.getenv('STARFISH_TRANSFER_QUEUE_CONSUME_FAILURE_NAME'):
-            logging.debug('Transfer to dropbox failed.  Sending failed message.')
-            #Send successful transfer message
-            notification_manager.notify_starfish_transfer_failure_message()
-        elif self.connection_params.queue == os.getenv('DRS_QUEUE_CONSUME_NAME'):
-            logging.debug('DRS Ingest complete.  Sending success message.')
-            #Send dummy ingest status message to process queue 
-            notification_manager.notify_drs_ingest_success_message()
+        logging.debug('DRS Ingest complete.  Sending success message.')
+        #Place a load report into the dropbox
+        notification_manager.send_drs_load_report(self.message_data["package_id"], self.issuccessmock)
+        self.issuccessmock = not self.issuccessmock
         
         self.connection_params.conn.ack(self.message_id, 1)
 
@@ -90,31 +83,7 @@ class MqListener(stomp.ConnectionListener):
     def get_message_id(self):
         return self.message_id
 
-         
-def initialize_starfishtransfersuccesslistener():
-    mqlistener = get_transfersuccessmqlistener()
-    conn = mqlistener.get_connection()
-    conn.set_listener('', mqlistener)
-    subscribe_to_listener(mqlistener.connection_params)
-    # http_clients://github.com/jasonrbriggs/stomp.py/issues/206
-    while True:
-        time.sleep(2)
-        if not conn.is_connected():
-            logging.debug('Disconnected in loop, reconnecting')
-            subscribe_to_listener(mqlistener.connection_params)
-
-def initialize_starfishtransferfailurelistener():
-    mqlistener = get_transferfailuremqlistener()
-    conn = mqlistener.get_connection()
-    conn.set_listener('', mqlistener)
-    subscribe_to_listener(mqlistener.connection_params)
-    # http_clients://github.com/jasonrbriggs/stomp.py/issues/206
-    while True:
-        time.sleep(2)
-        if not conn.is_connected():
-            logging.debug('Disconnected in loop, reconnecting')
-            subscribe_to_listener(mqlistener.connection_params)
-            
+    
 def initialize_drsbatchreadylistener():
     mqlistener = get_drsbatchreadymqlistener()
     conn = mqlistener.get_connection()
@@ -126,20 +95,6 @@ def initialize_drsbatchreadylistener():
         if not conn.is_connected():
             logging.debug('Disconnected in loop, reconnecting')
             subscribe_to_listener(mqlistener.connection_params)
-            
-def get_transfersuccessmqlistener():
-    '''This connection tells the mock starfish service to return
-    a successful transfer message'''
-    connection_params = mqutils.get_transfer_success_mq_connection()
-    mqlistener = MqListener(connection_params)
-    return mqlistener
-
-def get_transferfailuremqlistener():
-    '''This connection tells the mock starfish service to return
-    a failed transfer message'''
-    connection_params = mqutils.get_transfer_failure_mq_connection()
-    mqlistener = MqListener(connection_params)
-    return mqlistener
 
 def get_drsbatchreadymqlistener():
     connection_params = mqutils.get_drs_mq_connection()
@@ -147,18 +102,4 @@ def get_drsbatchreadymqlistener():
     return mqlistener
     
 if __name__ == "__main__":
-    permitted_values = {"drs", "transfersuccess", "transferfailure"}
-    args = sys.argv[1:]
-    listener = "drs"
-    if len(args) >= 1:
-        listener = args[0]
-     
-    if (listener not in permitted_values):
-        raise RuntimeException("Argument syntax requires either drs or process for parameters")
-     
-    if (listener == "drs"):    
-        initialize_drsbatchreadylistener()   
-    elif (listener == "transfersuccess"):
-        initialize_starfishtransfersuccesslistener()
-    else:
-        initialize_starfishtransferfailurelistener()
+    initialize_drsbatchreadylistener()   
