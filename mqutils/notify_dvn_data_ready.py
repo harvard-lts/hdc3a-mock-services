@@ -9,15 +9,15 @@ def notify_dvn_data_ready_for_transfer_service(doi_name):
     '''Creates a json message to be consumed by the real transfer service'''
     s3_bucket=os.getenv("S3_BUCKET_NAME", "dataverse-export-dev")
     dropbox_path=os.getenv("DROPBOX_PATH", "/home/appuser/local/dropbox")
-    dest_path = os.path.join(dropbox_path, doi_name)
     
     try:
         #Add more details that will be needed from the load report.
         msg_json = {
             "package_id": doi_name,
+            "application_name": "Dataverse",
             "s3_path": doi_name,
             "s3_bucket_name": s3_bucket,
-            "destination_path": dest_path,
+            "destination_path": dropbox_path,
             "admin_metadata": {"original_queue": os.getenv('TRANSFER_QUEUE_CONSUME_NAME'), "retry_count":0}
         }
 
